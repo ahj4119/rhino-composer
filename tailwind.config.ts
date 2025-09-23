@@ -47,6 +47,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        cad: {
+          dark: "hsl(var(--cad-dark))",
+          "dark-foreground": "hsl(var(--cad-dark-foreground))",
+          panel: "hsl(var(--cad-panel))",
+          "panel-foreground": "hsl(var(--cad-panel-foreground))",
+          sidebar: "hsl(var(--cad-sidebar))",
+          border: "hsl(var(--cad-border))",
+          accent: "hsl(var(--cad-accent))",
+          warning: "hsl(var(--cad-warning))",
+          success: "hsl(var(--cad-success))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
