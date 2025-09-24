@@ -18,12 +18,14 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { ThreeViewer } from "@/components/ThreeViewer";
 
 const Simulator = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewMode, setViewMode] = useState<"3d" | "top">("3d");
+  const [geometryData, setGeometryData] = useState<any[]>([]);
   
   // Grasshopper parameters
   const [parameters, setParameters] = useState({
@@ -53,12 +55,22 @@ const Simulator = () => {
       });
       
       if (response.ok) {
-        toast({
-          title: "생성 완료",
-          description: "3D 모델이 성공적으로 생성되었습니다.",
-        });
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Rhino Compute 응답 데이터를 Three.js가 이해할 수 있는 형태로 변환
+          const processedGeometry = processRhinoComputeData(result.data);
+          setGeometryData(processedGeometry);
+          
+          toast({
+            title: "생성 완료",
+            description: "3D 모델이 성공적으로 생성되었습니다.",
+          });
+        } else {
+          throw new Error(result.message || 'Generation failed');
+        }
       } else {
-        throw new Error('Generation failed');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Generation failed');
       }
     } catch (error) {
       toast({
@@ -76,6 +88,79 @@ const Simulator = () => {
       ...prev,
       [key]: value
     }));
+  };
+
+  // Rhino Compute 데이터를 Three.js 형태로 변환하는 함수
+  const processRhinoComputeData = (data: any) => {
+    if (!data.values) return [];
+    
+    const processedGeometry: any[] = [];
+    
+    data.values.forEach((value: any) => {
+      if (value.InnerTree) {
+        Object.keys(value.InnerTree).forEach(key => {
+          const items = value.InnerTree[key];
+          items.forEach((item: any) => {
+            if (item.data) {
+              try {
+                // Base64 디코딩된 3dm 파일 데이터 처리
+                // 실제 구현에서는 rhino3dm 라이브러리를 사용해야 함
+                // 지금은 간단한 더미 데이터로 테스트
+                processedGeometry.push({
+                  vertices: generateDummyVertices(),
+                  faces: generateDummyFaces(),
+                });
+              } catch (error) {
+                console.error('Error processing geometry data:', error);
+              }
+            }
+          });
+        });
+      }
+    });
+    
+    return processedGeometry;
+  };
+
+  // 더미 데이터 생성 함수 (실제 Rhino 데이터 파싱 전까지 사용)
+  const generateDummyVertices = () => {
+    const vertices = [];
+    for (let i = 0; i < parameters.x_count; i++) {
+      for (let j = 0; j < parameters.y_count; j++) {
+        const x = (i - parameters.x_count / 2) * parameters.x_grid / parameters.x_count;
+        const z = (j - parameters.y_count / 2) * parameters.y_grid / parameters.y_count;
+        const y = parameters.height;
+        
+        // 박스의 8개 꼭짓점
+        const size = 200;
+        vertices.push(
+          [x - size, y - size, z - size], [x + size, y - size, z - size],
+          [x + size, y + size, z - size], [x - size, y + size, z - size],
+          [x - size, y - size, z + size], [x + size, y - size, z + size],
+          [x + size, y + size, z + size], [x - size, y + size, z + size]
+        );
+      }
+    }
+    return vertices;
+  };
+
+  const generateDummyFaces = () => {
+    const faces = [];
+    const boxCount = parameters.x_count * parameters.y_count;
+    
+    for (let i = 0; i < boxCount; i++) {
+      const offset = i * 8;
+      // 박스의 12개 삼각형 면
+      faces.push(
+        [offset + 0, offset + 1, offset + 2], [offset + 0, offset + 2, offset + 3], // 앞면
+        [offset + 4, offset + 7, offset + 6], [offset + 4, offset + 6, offset + 5], // 뒷면
+        [offset + 0, offset + 4, offset + 5], [offset + 0, offset + 5, offset + 1], // 아래면
+        [offset + 2, offset + 6, offset + 7], [offset + 2, offset + 7, offset + 3], // 위면
+        [offset + 0, offset + 3, offset + 7], [offset + 0, offset + 7, offset + 4], // 왼쪽면
+        [offset + 1, offset + 5, offset + 6], [offset + 1, offset + 6, offset + 2]  // 오른쪽면
+      );
+    }
+    return faces;
   };
 
   return (
@@ -244,18 +329,26 @@ const Simulator = () => {
               </Button>
             </div>
             
-            <div className="w-full h-full bg-gradient-to-br from-cad-dark to-cad-panel flex items-center justify-center">
-              <div className="text-center text-cad-dark-foreground">
-                <Box className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-medium mb-2">3D 뷰어</h3>
-                <p className="text-sm opacity-75">
-                  {viewMode === "3d" ? "3D 모델 뷰" : "평면 뷰"}
-                </p>
-                <p className="text-xs opacity-50 mt-2">
-                  파라미터를 설정하고 '생성하기'를 클릭하세요
-                </p>
+            {geometryData.length > 0 ? (
+              <ThreeViewer 
+                geometryData={geometryData} 
+                viewMode={viewMode}
+                className="w-full h-full"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-cad-dark to-cad-panel flex items-center justify-center">
+                <div className="text-center text-cad-dark-foreground">
+                  <Box className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-xl font-medium mb-2">3D 뷰어</h3>
+                  <p className="text-sm opacity-75">
+                    {viewMode === "3d" ? "3D 모델 뷰" : "평면 뷰"}
+                  </p>
+                  <p className="text-xs opacity-50 mt-2">
+                    파라미터를 설정하고 '생성하기'를 클릭하세요
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </Card>
         </main>
       </div>
