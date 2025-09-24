@@ -1,0 +1,5 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+compute-rhino3d==0.15.0
+rhino3dm==8.0.0
+requests==2.31.0

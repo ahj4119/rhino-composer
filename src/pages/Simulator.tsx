@@ -43,8 +43,8 @@ const Simulator = () => {
     });
     
     try {
-      // Simulate API call to Flask server
-      const response = await fetch('http://localhost:6500/generate', {
+      // API call to Flask server
+      const response = await fetch('http://localhost:5000/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
