@@ -5,6 +5,7 @@ import rhino3dm
 import requests
 import base64
 import json
+import urllib.parse
 import os
 import tempfile
 from datetime import datetime
@@ -43,25 +44,32 @@ class ColumnsGenerator:
             raise ValueError(f"Error loading Grasshopper file: {e}")
         
     def generate(self):
-        """Grasshopper 정의 실행 (입력 파라미터 없음)"""
+        """Grasshopper 정의 실행 (파일 경로를 pointer로 전달)"""
         try:
-            data_bytes = self.gh_data.encode("utf-8")
-            encoded = base64.b64encode(data_bytes)
-            decoded = encoded.decode("utf-8")
+            import urllib.parse
+            
+            # 절대 경로로 변환
+            absolute_path = os.path.abspath(self.ghx_file)
+            
+            # 파일 경로를 URL 인코딩 (슬래시 방향 수정)
+            encoded_path = urllib.parse.quote(absolute_path.replace("\\", "/"))
+            
+            # Rhino Compute 서버에 pointer 방식으로 요청
+            url = f"{post_url}?pointer={encoded_path}"
             
             headers = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
             
-            # 입력 파라미터 없이 Grasshopper 정의만 실행
-            payload = {
-                "definition": decoded,
-                "inputs": []
-            }
+            # 입력 파라미터 없이 빈 payload로 요청
+            payload = {}
             
-            # Rhino Compute 서버에 요청
-            response = requests.post(post_url, json=payload, headers=headers)
+            print(f"Calling Rhino Compute with pointer: {url}")
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            
+            print(f"Response status: {response.status_code}")
             
             if response.status_code == 200:
                 result = response.json()
@@ -71,6 +79,7 @@ class ColumnsGenerator:
                     "message": "Generation completed successfully"
                 }
             else:
+                print(f"Response text: {response.text}")
                 return {
                     "success": False,
                     "error": f"Rhino Compute error: {response.status_code}",
@@ -78,6 +87,7 @@ class ColumnsGenerator:
                 }
                 
         except Exception as e:
+            print(f"Exception occurred: {e}")
             return {
                 "success": False,
                 "error": str(e),
