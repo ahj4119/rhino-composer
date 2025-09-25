@@ -23,8 +23,24 @@ class ColumnsGenerator:
         if not os.path.exists(self.ghx_file):
             raise FileNotFoundError(f"Grasshopper file not found: {self.ghx_file}")
         
-        with open(self.ghx_file, mode="r", encoding="utf-8-sig") as f:
-            self.gh_data = f.read()
+        try:
+            with open(self.ghx_file, mode="r", encoding="utf-8-sig") as f:
+                self.gh_data = f.read()
+            
+            # Validate file content
+            if not self.gh_data.strip():
+                raise ValueError("Grasshopper file is empty")
+            
+            # Check if it looks like a valid GH file
+            if not ('<Archive' in self.gh_data or 'grasshopper' in self.gh_data.lower()):
+                raise ValueError("File doesn't appear to be a valid Grasshopper definition")
+                
+            print(f"✓ Grasshopper file loaded: {len(self.gh_data)} characters")
+            
+        except UnicodeDecodeError as e:
+            raise ValueError(f"Unable to read Grasshopper file (encoding issue): {e}")
+        except Exception as e:
+            raise ValueError(f"Error loading Grasshopper file: {e}")
         
     def generate(self, height=690):
         """Grasshopper 정의 실행"""
