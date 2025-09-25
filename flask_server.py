@@ -26,7 +26,7 @@ class ColumnsGenerator:
         with open(self.ghx_file, mode="r", encoding="utf-8-sig") as f:
             self.gh_data = f.read()
         
-    def generate(self, x_count=11, y_count=14, height=690, x_grid=10800, y_grid=10800, z_height=9000):
+    def generate(self, height=690):
         """Grasshopper 정의 실행"""
         try:
             data_bytes = self.gh_data.encode("utf-8")
@@ -42,12 +42,7 @@ class ColumnsGenerator:
             payload = {
                 "definition": decoded,
                 "inputs": [
-                    {"ParamName": "x_count", "InnerTree": {0: [{"type": "System.Int32", "data": x_count}]}},
-                    {"ParamName": "y_count", "InnerTree": {0: [{"type": "System.Int32", "data": y_count}]}},
-                    {"ParamName": "height", "InnerTree": {0: [{"type": "System.Double", "data": height}]}},
-                    {"ParamName": "x_grid", "InnerTree": {0: [{"type": "System.Double", "data": x_grid}]}},
-                    {"ParamName": "y_grid", "InnerTree": {0: [{"type": "System.Double", "data": y_grid}]}},
-                    {"ParamName": "z_height", "InnerTree": {0: [{"type": "System.Double", "data": z_height}]}}
+                    {"ParamName": "height", "InnerTree": {0: [{"type": "System.Double", "data": height}]}}
                 ]
             }
             
@@ -119,24 +114,12 @@ def generate():
         data = request.get_json()
         
         # 파라미터 추출 (기본값 사용)
-        x_count = data.get('x_count', 11)
-        y_count = data.get('y_count', 14)
         height = data.get('height', 690)
-        x_grid = data.get('x_grid', 10800)
-        y_grid = data.get('y_grid', 10800)
-        z_height = data.get('z_height', 9000)
         
-        print(f"Generating with parameters: x_count={x_count}, y_count={y_count}, height={height}")
+        print(f"Generating with parameters: height={height}")
         
         # Grasshopper 실행
-        result = generator.generate(
-            x_count=x_count,
-            y_count=y_count,
-            height=height,
-            x_grid=x_grid,
-            y_grid=y_grid,
-            z_height=z_height
-        )
+        result = generator.generate(height=height)
         
         if result["success"]:
             return jsonify(result)
@@ -155,35 +138,10 @@ def get_parameters():
     """사용 가능한 파라미터 정보 반환"""
     return jsonify({
         "parameters": {
-            "x_count": {
-                "type": "integer",
-                "default": 11,
-                "description": "X 축 요소 개수"
-            },
-            "y_count": {
-                "type": "integer", 
-                "default": 14,
-                "description": "Y 축 요소 개수"
-            },
             "height": {
                 "type": "number",
                 "default": 690,
                 "description": "요소 높이"
-            },
-            "x_grid": {
-                "type": "number",
-                "default": 10800,
-                "description": "X 축 그리드 간격"
-            },
-            "y_grid": {
-                "type": "number",
-                "default": 10800,
-                "description": "Y 축 그리드 간격"
-            },
-            "z_height": {
-                "type": "number",
-                "default": 9000,
-                "description": "Z 축 높이"
             }
         }
     })

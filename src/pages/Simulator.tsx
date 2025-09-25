@@ -29,12 +29,7 @@ const Simulator = () => {
   
   // Grasshopper parameters
   const [parameters, setParameters] = useState({
-    x_count: 11,
-    y_count: 14,
     height: 690,
-    x_grid: 10800,
-    y_grid: 10800,
-    z_height: 9000,
   });
 
   const handleGenerate = async () => {
@@ -125,41 +120,31 @@ const Simulator = () => {
   // 더미 데이터 생성 함수 (실제 Rhino 데이터 파싱 전까지 사용)
   const generateDummyVertices = () => {
     const vertices = [];
-    for (let i = 0; i < parameters.x_count; i++) {
-      for (let j = 0; j < parameters.y_count; j++) {
-        const x = (i - parameters.x_count / 2) * parameters.x_grid / parameters.x_count;
-        const z = (j - parameters.y_count / 2) * parameters.y_grid / parameters.y_count;
-        const y = parameters.height;
-        
-        // 박스의 8개 꼭짓점
-        const size = 200;
-        vertices.push(
-          [x - size, y - size, z - size], [x + size, y - size, z - size],
-          [x + size, y + size, z - size], [x - size, y + size, z - size],
-          [x - size, y - size, z + size], [x + size, y - size, z + size],
-          [x + size, y + size, z + size], [x - size, y + size, z + size]
-        );
-      }
-    }
+    // 단순한 박스 하나만 생성
+    const x = 0, z = 0;
+    const y = parameters.height;
+    
+    // 박스의 8개 꼭짓점
+    const size = 500;
+    vertices.push(
+      [x - size, 0, z - size], [x + size, 0, z - size],
+      [x + size, y, z - size], [x - size, y, z - size],
+      [x - size, 0, z + size], [x + size, 0, z + size],
+      [x + size, y, z + size], [x - size, y, z + size]
+    );
     return vertices;
   };
 
   const generateDummyFaces = () => {
-    const faces = [];
-    const boxCount = parameters.x_count * parameters.y_count;
-    
-    for (let i = 0; i < boxCount; i++) {
-      const offset = i * 8;
-      // 박스의 12개 삼각형 면
-      faces.push(
-        [offset + 0, offset + 1, offset + 2], [offset + 0, offset + 2, offset + 3], // 앞면
-        [offset + 4, offset + 7, offset + 6], [offset + 4, offset + 6, offset + 5], // 뒷면
-        [offset + 0, offset + 4, offset + 5], [offset + 0, offset + 5, offset + 1], // 아래면
-        [offset + 2, offset + 6, offset + 7], [offset + 2, offset + 7, offset + 3], // 위면
-        [offset + 0, offset + 3, offset + 7], [offset + 0, offset + 7, offset + 4], // 왼쪽면
-        [offset + 1, offset + 5, offset + 6], [offset + 1, offset + 6, offset + 2]  // 오른쪽면
-      );
-    }
+    // 단순한 박스 하나의 12개 삼각형 면
+    const faces = [
+      [0, 1, 2], [0, 2, 3], // 앞면
+      [4, 7, 6], [4, 6, 5], // 뒷면
+      [0, 4, 5], [0, 5, 1], // 아래면
+      [2, 6, 7], [2, 7, 3], // 위면
+      [0, 3, 7], [0, 7, 4], // 왼쪽면
+      [1, 5, 6], [1, 6, 2]  // 오른쪽면
+    ];
     return faces;
   };
 
@@ -215,74 +200,17 @@ const Simulator = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Grid Parameters */}
+              {/* Height Parameter */}
               <Card className="p-4 bg-cad-panel border-cad-border">
-                <h3 className="font-medium mb-3 text-cad-panel-foreground">그리드 설정</h3>
+                <h3 className="font-medium mb-3 text-cad-panel-foreground">파라미터 설정</h3>
                 <div className="space-y-3">
                   <div>
-                    <Label htmlFor="x_count" className="text-cad-panel-foreground">X 개수</Label>
-                    <Input
-                      id="x_count"
-                      type="number"
-                      value={parameters.x_count}
-                      onChange={(e) => handleParameterChange('x_count', parseInt(e.target.value))}
-                      className="bg-cad-dark border-cad-border text-cad-dark-foreground"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="y_count" className="text-cad-panel-foreground">Y 개수</Label>
-                    <Input
-                      id="y_count"
-                      type="number"
-                      value={parameters.y_count}
-                      onChange={(e) => handleParameterChange('y_count', parseInt(e.target.value))}
-                      className="bg-cad-dark border-cad-border text-cad-dark-foreground"
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              {/* Dimension Parameters */}
-              <Card className="p-4 bg-cad-panel border-cad-border">
-                <h3 className="font-medium mb-3 text-cad-panel-foreground">치수 설정</h3>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="height" className="text-cad-panel-foreground">높이</Label>
+                    <Label htmlFor="height" className="text-cad-panel-foreground">높이 (Height)</Label>
                     <Input
                       id="height"
                       type="number"
                       value={parameters.height}
                       onChange={(e) => handleParameterChange('height', parseInt(e.target.value))}
-                      className="bg-cad-dark border-cad-border text-cad-dark-foreground"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="x_grid" className="text-cad-panel-foreground">X 그리드</Label>
-                    <Input
-                      id="x_grid"
-                      type="number"
-                      value={parameters.x_grid}
-                      onChange={(e) => handleParameterChange('x_grid', parseInt(e.target.value))}
-                      className="bg-cad-dark border-cad-border text-cad-dark-foreground"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="y_grid" className="text-cad-panel-foreground">Y 그리드</Label>
-                    <Input
-                      id="y_grid"
-                      type="number"
-                      value={parameters.y_grid}
-                      onChange={(e) => handleParameterChange('y_grid', parseInt(e.target.value))}
-                      className="bg-cad-dark border-cad-border text-cad-dark-foreground"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="z_height" className="text-cad-panel-foreground">Z 높이</Label>
-                    <Input
-                      id="z_height"
-                      type="number"
-                      value={parameters.z_height}
-                      onChange={(e) => handleParameterChange('z_height', parseInt(e.target.value))}
                       className="bg-cad-dark border-cad-border text-cad-dark-foreground"
                     />
                   </div>
