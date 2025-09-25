@@ -162,6 +162,61 @@ def get_parameters():
         }
     })
 
+@app.route('/debug/file-info')
+def debug_file_info():
+    """Grasshopper 파일 정보 확인"""
+    if generator is None:
+        return jsonify({
+            "error": "Generator not loaded",
+            "file_exists": os.path.exists("./columns.ghx")
+        }), 500
+    
+    try:
+        file_size = os.path.getsize("./columns.ghx")
+        with open("./columns.ghx", 'r', encoding="utf-8-sig") as f:
+            content = f.read()
+            
+        return jsonify({
+            "file_exists": True,
+            "file_size": file_size,
+            "content_length": len(content),
+            "first_100_chars": content[:100],
+            "last_100_chars": content[-100:],
+            "contains_archive": '<Archive' in content,
+            "contains_grasshopper": 'grasshopper' in content.lower(),
+            "encoding_test_passed": True
+        })
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "file_exists": os.path.exists("./columns.ghx")
+        }), 500
+
+@app.route('/debug/test-encode')
+def debug_test_encode():
+    """Base64 인코딩 테스트"""
+    if generator is None:
+        return jsonify({"error": "Generator not loaded"}), 500
+    
+    try:
+        # 간단한 인코딩 테스트
+        data_bytes = generator.gh_data.encode("utf-8")
+        encoded = base64.b64encode(data_bytes)
+        decoded_text = encoded.decode("utf-8")
+        
+        return jsonify({
+            "original_length": len(generator.gh_data),
+            "encoded_length": len(encoded),
+            "decoded_length": len(decoded_text),
+            "encoding_success": True,
+            "first_50_encoded": decoded_text[:50]
+        })
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "encoding_success": False
+        }), 500
+
 if __name__ == '__main__':
     print("="*50)
     print("Rhino Compute Flask Server")
