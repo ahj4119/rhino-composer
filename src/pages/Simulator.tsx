@@ -27,11 +27,6 @@ const Simulator = () => {
   const [viewMode, setViewMode] = useState<"3d" | "top">("3d");
   const [geometryData, setGeometryData] = useState<any[]>([]);
   
-  // Grasshopper parameters
-  const [parameters, setParameters] = useState({
-    height: 690,
-  });
-
   const handleGenerate = async () => {
     setIsGenerating(true);
     toast({
@@ -40,13 +35,13 @@ const Simulator = () => {
     });
     
     try {
-      // API call to Flask server
+      // API call to Flask server (no parameters needed)
       const response = await fetch('http://localhost:5000/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(parameters),
+        body: JSON.stringify({}),
       });
       
       if (response.ok) {
@@ -78,12 +73,6 @@ const Simulator = () => {
     }
   };
 
-  const handleParameterChange = (key: string, value: number) => {
-    setParameters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
 
   // Rhino Compute 데이터를 Three.js 형태로 변환하는 함수
   const processRhinoComputeData = (data: any) => {
@@ -122,7 +111,7 @@ const Simulator = () => {
     const vertices = [];
     // 단순한 박스 하나만 생성
     const x = 0, z = 0;
-    const y = parameters.height;
+    const y = 1000; // 고정된 높이 사용
     
     // 박스의 8개 꼭짓점
     const size = 500;
@@ -200,21 +189,12 @@ const Simulator = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Height Parameter */}
+              {/* Info Card */}
               <Card className="p-4 bg-cad-panel border-cad-border">
-                <h3 className="font-medium mb-3 text-cad-panel-foreground">파라미터 설정</h3>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="height" className="text-cad-panel-foreground">높이 (Height)</Label>
-                    <Input
-                      id="height"
-                      type="number"
-                      value={parameters.height}
-                      onChange={(e) => handleParameterChange('height', parseInt(e.target.value))}
-                      className="bg-cad-dark border-cad-border text-cad-dark-foreground"
-                    />
-                  </div>
-                </div>
+                <h3 className="font-medium mb-3 text-cad-panel-foreground">Grasshopper 정의</h3>
+                <p className="text-sm text-cad-panel-foreground/70">
+                  현재 설정된 Grasshopper 정의 파일을 입력 파라미터 없이 실행합니다.
+                </p>
               </Card>
 
               <Separator className="bg-cad-border" />
@@ -272,7 +252,7 @@ const Simulator = () => {
                     {viewMode === "3d" ? "3D 모델 뷰" : "평면 뷰"}
                   </p>
                   <p className="text-xs opacity-50 mt-2">
-                    파라미터를 설정하고 '생성하기'를 클릭하세요
+                    '생성하기'를 클릭하여 Grasshopper 정의를 실행하세요
                   </p>
                 </div>
               </div>

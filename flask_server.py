@@ -42,8 +42,8 @@ class ColumnsGenerator:
         except Exception as e:
             raise ValueError(f"Error loading Grasshopper file: {e}")
         
-    def generate(self, height=690):
-        """Grasshopper 정의 실행"""
+    def generate(self):
+        """Grasshopper 정의 실행 (입력 파라미터 없음)"""
         try:
             data_bytes = self.gh_data.encode("utf-8")
             encoded = base64.b64encode(data_bytes)
@@ -54,12 +54,10 @@ class ColumnsGenerator:
                 'Accept': 'application/json'
             }
             
-            # Grasshopper 파라미터 설정
+            # 입력 파라미터 없이 Grasshopper 정의만 실행
             payload = {
                 "definition": decoded,
-                "inputs": [
-                    {"ParamName": "height", "InnerTree": {0: [{"type": "System.Double", "data": height}]}}
-                ]
+                "inputs": []
             }
             
             # Rhino Compute 서버에 요청
@@ -118,7 +116,7 @@ def health():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    """Grasshopper 정의 실행"""
+    """Grasshopper 정의 실행 (입력 파라미터 없음)"""
     if generator is None:
         return jsonify({
             "success": False,
@@ -127,15 +125,10 @@ def generate():
         }), 500
     
     try:
-        data = request.get_json()
+        print("Generating geometry without input parameters...")
         
-        # 파라미터 추출 (기본값 사용)
-        height = data.get('height', 690)
-        
-        print(f"Generating with parameters: height={height}")
-        
-        # Grasshopper 실행
-        result = generator.generate(height=height)
+        # 입력 파라미터 없이 Grasshopper 실행
+        result = generator.generate()
         
         if result["success"]:
             return jsonify(result)
@@ -151,15 +144,10 @@ def generate():
 
 @app.route('/parameters')
 def get_parameters():
-    """사용 가능한 파라미터 정보 반환"""
+    """사용 가능한 파라미터 정보 반환 (현재는 입력 파라미터 없음)"""
     return jsonify({
-        "parameters": {
-            "height": {
-                "type": "number",
-                "default": 690,
-                "description": "요소 높이"
-            }
-        }
+        "parameters": {},
+        "message": "No input parameters required - using Grasshopper definition as-is"
     })
 
 @app.route('/debug/file-info')
