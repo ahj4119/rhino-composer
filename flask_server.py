@@ -44,30 +44,27 @@ class ColumnsGenerator:
             raise ValueError(f"Error loading Grasshopper file: {e}")
         
     def generate(self):
-        """Grasshopper 정의 실행 (파일 경로를 pointer로 전달)"""
+        """Grasshopper 정의 실행 (base64 인코딩으로 전송)"""
         try:
-            import urllib.parse
-            
-            # 절대 경로로 변환
-            absolute_path = os.path.abspath(self.ghx_file)
-            
-            # 파일 경로를 URL 인코딩 (슬래시 방향 수정)
-            encoded_path = urllib.parse.quote(absolute_path.replace("\\", "/"))
-            
-            # Rhino Compute 서버에 pointer 방식으로 요청
-            url = f"{post_url}?pointer={encoded_path}"
+            # Grasshopper 정의를 base64로 인코딩
+            data_bytes = self.gh_data.encode("utf-8")
+            encoded = base64.b64encode(data_bytes)
+            decoded = encoded.decode("utf-8")
             
             headers = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
             
-            # 입력 파라미터 없이 빈 payload로 요청
-            payload = {}
+            # Grasshopper 정의와 빈 입력 파라미터로 payload 구성
+            payload = {
+                "definition": decoded,
+                "inputs": []
+            }
             
-            print(f"Calling Rhino Compute with pointer: {url}")
+            print(f"Calling Rhino Compute with base64 definition (length: {len(decoded)})")
             
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response = requests.post(post_url, json=payload, headers=headers, timeout=30)
             
             print(f"Response status: {response.status_code}")
             
